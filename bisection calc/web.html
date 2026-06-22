@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Numerical Analysis Solver</title>
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Plotly CDN -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>📊 Numerical Analysis Solver</h1>
+        <p>Root Finding & Linear Systems Solutions</p>
+      </header>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('root-finding')">
+          🔍 Root Finding
+        </button>
+        <button class="tab-btn" onclick="switchTab('linear-systems')">
+          ➕ Linear Systems
+        </button>
+        <button class="tab-btn" onclick="switchTab('optimization')">
+          📈 Optimization
+        </button>
+      </div>
+
+      <!-- ROOT FINDING TAB -->
+      <div id="root-finding" class="content active">
+        <div class="section">
+          <h2>Root Finding Methods</h2>
+
+          <div class="info-box">
+            <strong>ℹ️ Info:</strong> Select a method to find roots of
+            polynomial or transcendental functions.
+          </div>
+
+          <div class="syntax-examples">
+            <strong>✅ Accepted Syntax Examples:</strong>
+            <code>x^3 OR x**3</code> <code>6*x OR 6x</code> <code>sin(x)</code>
+            <code>cos(x)</code> <code>sqrt(x)</code>
+          </div>
+          <br />
+
+          <div class="method-select">
+            <label>Select Method:</label>
+            <select id="root-method" onchange="updateRootMethodUI()">
+              <option value="bisection">Bisection Method</option>
+              <option value="false-position">False Position Method</option>
+              <option value="newton">Newton's Method</option>
+              <option value="secant">Secant Method</option>
+              <option value="fixed-point">Fixed Point Method</option>
+            </select>
+
+            <div id="method-rule" class="method-rule-box"></div>
+          </div>
+
+          <!-- Common Inputs -->
+          <div id="common-inputs">
+            <div class="input-group">
+              <div class="form-group">
+                <label for="root-tol">Tolerance (εₐ %):</label>
+                <input
+                  type="number"
+                  id="root-tol"
+                  placeholder="e.g., 0.5%"
+                  step="0.1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="max-iter">Max Iterations:</label>
+                <input type="number" id="max-iter" value="50" step="1" min="1" max="50" />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="form-group">
+                <label for="decimal-places">Decimal Places (Round-Up):</label>
+                <input
+                  type="number"
+                  id="decimal-places"
+                  value="3"
+                  min="1"
+                  max="15"
+                  step="1"
+                />
+              </div>
+            </div>
+
+            <div id="secant-criterion" style="display: none">
+              <div class="form-group full">
+                <label for="secant-stop"
+                  >Secant Method Stopping Criterion:</label
+                >
+                <select id="secant-stop">
+                  <option value="error-percent">
+                    Relative Error (%) < Tolerance
+                  </option>
+                  <option value="function-value">|f(x)| < Tolerance</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Test Example Section -->
+          <div id="test-example" class="syntax-examples">
+            <!-- Updated dynamically by updateRootMethodUI() -->
+          </div>
+
+          <!-- Bisection & False Position -->
+          <div id="bracketing-inputs">
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="poly-coeffs">Function / Expression:</label>
+                <input
+                  type="text"
+                  id="poly-coeffs"
+                  placeholder="e.g., -0.6x^2 + 2.4x + 5.5 "
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="form-group">
+                <label for="x-lower">X Lower (Xₗ):</label>
+                <input
+                  type="number"
+                  id="x-lower"
+                  step="0.1"
+                  placeholder="e.g., 5"
+                />
+              </div>
+              <div class="form-group">
+                <label for="x-upper">X Upper (Xᵤ):</label>
+                <input
+                  type="number"
+                  id="x-upper"
+                  step="0.1"
+                  placeholder="e.g., 10"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Newton's Method -->
+          <div id="newton-inputs" style="display: none">
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="newton-func">f(x):</label>
+                <input
+                  type="text"
+                  id="newton-func"
+                  placeholder="e.g., 0.95*x^3-5.9*x^2+10.9*x-6"
+                />
+              </div>
+            </div>
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="newton-deriv">f'(x):</label>
+                <input
+                  type="text"
+                  id="newton-deriv"
+                  placeholder="e.g., 2.85*x^2-11.8*x+10.9"
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="form-group">
+                <label for="x0">x₀ (Initial guess):</label>
+                <input type="number" id="x0" step="0.1" placeholder="e.g., 3" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Secant Method -->
+          <div id="secant-inputs" style="display: none">
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="secant-func">f(x):</label>
+                <input
+                  type="text"
+                  id="secant-func"
+                  placeholder="e.g., 0.95*x^3-5.9*x^2+10.9*x-6"
+                  value="0.95*x^3-5.9*x^2+10.9*x-6"
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="form-group">
+                <label for="x0-s">x₀:</label>
+                <input
+                  type="number"
+                  id="x0-s"
+                  step="0.1"
+                  placeholder="e.g., 0"
+                />
+              </div>
+              <div class="form-group">
+                <label for="x1-s">x₁:</label>
+                <input
+                  type="number"
+                  id="x1-s"
+                  step="0.1"
+                  placeholder="e.g., 1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Fixed Point -->
+          <div id="fixedpoint-inputs" style="display: none">
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="fixedpoint-func">f(x):</label>
+                <input
+                  type="text"
+                  id="fixedpoint-func"
+                  placeholder="e.g., x^5-2.5*x+1"
+                  value="x^5-2.5*x+1"
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="form-group">
+                <label for="x0-fp">x₀ (Initial guess):</label>
+                <input
+                  type="number"
+                  id="x0-fp"
+                  step="0.1"
+                  placeholder="e.g., 2"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button class="btn-solve" onclick="solveRootFinding()">
+              Solve
+            </button>
+            <button class="btn-clear" onclick="clearRootResults()">
+              Clear
+            </button>
+          </div>
+
+          <div id="root-results" class="results"></div>
+          <div id="root-plot" class="plot-container" style="display: none; margin-top: 22px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); min-height: 420px;"></div>
+        </div>
+      </div>
+
+      <!-- LINEAR SYSTEMS TAB -->
+      <div id="linear-systems" class="content">
+        <div class="section">
+          <h2>Linear Systems Solver</h2>
+
+          <div class="info-box">
+            <strong>ℹ️ Info:</strong> Solve systems of linear equations using
+            various methods.
+          </div>
+          <br />
+          <div class="method-select">
+            <label>Select Method:</label>
+            <select id="linear-method">
+              <option value="gaussian">Gaussian Elimination</option>
+              <option value="gaussian-pp">
+                Gaussian Elimination (Partial Pivoting)
+              </option>
+              <option value="gauss-jordan">Gauss-Jordan Elimination</option>
+              <option value="lu">LU Decomposition</option>
+              <option value="cramer">Cramer's Rule</option>
+            </select>
+            <div id="linear-test-example" class="syntax-examples">
+              <strong>✅ Example:</strong>
+              <code>Use the sample 3×3 system and then click Solve.</code>
+              <div class="example-button-wrap">
+                <button class="btn-example" onclick="fillLinearExampleData()">
+                  Use this example
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <div class="form-group">
+              <label for="matrix-size">System Size (n×n):</label>
+              <input
+                type="number"
+                id="matrix-size"
+                placeholder="e.g., n=2: (2x2)"
+                min="2"
+                max="4"
+                onchange="generateMatrixInputs()"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Coefficient Matrix (A) | Constants (b):</label>
+            <div id="matrix-input-container" class="matrix-input"></div>
+          </div>
+
+          <div class="button-group">
+            <button class="btn-solve" onclick="solveLinearSystem()">
+              Solve
+            </button>
+            <button class="btn-clear" onclick="clearLinearResults()">
+              Clear
+            </button>
+          </div>
+
+          <div id="linear-results" class="results"></div>
+        </div>
+      </div>
+      <!-- OPTIMIZATION TAB (Chapter 3) -->
+      <div id="optimization" class="content">
+        <div class="section">
+          <h2>Unconstrained Optimization (Chapter 3)</h2>
+
+          <div class="info-box">
+            <strong>ℹ️ Info:</strong> Find the minimum or maximum of a function
+            using bracketing (Golden-Section) or gradient-based (Steepest
+            Ascent/Descent) methods.
+          </div>
+          <br />
+          <div class="method-select">
+            <label>Select Method:</label>
+            <select id="opt-method" onchange="updateOptMethodUI()">
+              <option value="golden-section">Golden-Section Search (1D)</option>
+              <option value="steepest-ascent">
+                Steepest Ascent / Descent (2D Gradient)
+              </option>
+            </select>
+            <div id="opt-method-rule" class="method-rule-box"></div>
+          </div>
+
+          <!-- Test Example -->
+          <div id="opt-test-example" class="syntax-examples"></div>
+
+          <!-- Common inputs -->
+          <div class="input-group">
+            <div class="form-group">
+              <label for="opt-tol">Tolerance (εₐ %):</label>
+              <input
+                type="number"
+                id="opt-tol"
+                placeholder="e.g., 0.5"
+                step="0.1"
+              />
+            </div>
+            <div class="form-group">
+              <label for="opt-max-iter">Max Iterations:</label>
+              <input type="number" id="opt-max-iter" value="50" step="1" min="1" max="50" />
+            </div>
+            <div class="form-group">
+              <label for="opt-decimal-places">Decimal Places:</label>
+              <input
+                type="number"
+                id="opt-decimal-places"
+                value="6"
+                min="1"
+                max="15"
+                step="1"
+              />
+            </div>
+          </div>
+
+          <!-- Golden Section Inputs -->
+          <div id="golden-inputs">
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="golden-func">f(x):</label>
+                <input
+                  type="text"
+                  id="golden-func"
+                  placeholder="e.g., 2*sin(x) - x^2/10"
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="form-group">
+                <label for="golden-xl">x lower (xl):</label>
+                <input
+                  type="number"
+                  id="golden-xl"
+                  step="0.1"
+                  placeholder="e.g., 0"
+                />
+              </div>
+              <div class="form-group">
+                <label for="golden-xu">x upper (xu):</label>
+                <input
+                  type="number"
+                  id="golden-xu"
+                  step="0.1"
+                  placeholder="e.g., 4"
+                />
+              </div>
+              <div class="form-group">
+                <label for="golden-goal">Goal:</label>
+                <select id="golden-goal">
+                  <option value="max">Maximize</option>
+                  <option value="min">Minimize</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Steepest Ascent Inputs -->
+          <div id="steepest-inputs" style="display: none">
+            <div class="syntax-examples">
+              <strong>✅ Accepted Syntax:</strong>
+              <code>x^2 OR x**2</code> <code>2*x*y OR 2xy</code>
+              <code>sin(x)</code> <code>cos(y)</code>
+            </div>
+            <div class="input-group full">
+              <div class="form-group">
+                <label for="steepest-func">f(x, y):</label>
+                <input
+                  type="text"
+                  id="steepest-func"
+                  placeholder="e.g., 2*x*y + 2*x - x^2 - 2*y^2"
+                />
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="form-group">
+                <label for="steepest-x0">x₀ (initial x):</label>
+                <input
+                  type="number"
+                  id="steepest-x0"
+                  step="0.1"
+                  placeholder="e.g., -1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="steepest-y0">y₀ (initial y):</label>
+                <input
+                  type="number"
+                  id="steepest-y0"
+                  step="0.1"
+                  placeholder="e.g., 1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="steepest-goal">Goal:</label>
+                <select id="steepest-goal">
+                  <option value="max">Maximize (Steepest Ascent)</option>
+                  <option value="min">Minimize (Steepest Descent)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button class="btn-solve" onclick="solveOptimization()">
+              Solve
+            </button>
+            <button class="btn-clear" onclick="clearOptResults()">Clear</button>
+          </div>
+
+          <div id="opt-results" class="results"></div>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
